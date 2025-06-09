@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloco de Notas de Sammy Kunimatsu - API Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <h1 class="text-3xl font-bold text-gray-900">📝 Bloco de Notas de Sammy Kunimatsu</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a 
+                        href="/docs" 
+                        target="_blank"
+                        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Documentação
+                    </a>
+                    <button 
+                        onclick="openCreateModal()" 
+                        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                    >
+                        <span class="text-lg">+</span>
+                        Nova Nota
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="searchInput"
+                    placeholder="Buscar notas por título ou conteúdo..."
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    oninput="filterNotes()"
+                >
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div id="loading" class="text-center py-12 hidden">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p class="mt-2 text-gray-600">Carregando notas...</p>
+        </div>
+        <div id="emptyState" class="text-center py-12 hidden">
+            <div class="text-6xl mb-4">📝</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Nenhuma nota encontrada</h3>
+            <p class="text-gray-600 mb-6">Comece criando sua primeira nota!</p>
+            <button 
+                onclick="openCreateModal()" 
+                class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+                Criar primeira nota
+            </button>
+        </div>
+        <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        </div>
+    </main>
+    <div id="noteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="modalTitle" class="text-2xl font-bold text-gray-900">Nova Nota</h2>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="noteForm" onsubmit="saveNote(event)">
+                    <div class="mb-4">
+                        <label for="noteTitle" class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+                        <input 
+                            type="text" 
+                            id="noteTitle" 
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Digite o título da nota..."
+                        >
+                    </div>
+                    <div class="mb-6">
+                        <label for="noteContent" class="block text-sm font-medium text-gray-700 mb-2">Conteúdo</label>
+                        <textarea 
+                            id="noteContent" 
+                            required
+                            rows="8"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                            placeholder="Digite o conteúdo da nota..."
+                        ></textarea>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button 
+                            type="button" 
+                            onclick="closeModal()" 
+                            class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            type="submit" 
+                            class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                            Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-md w-full">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-lg font-medium text-gray-900">Confirmar exclusão</h3>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500">
+                        Tem certeza que deseja excluir esta nota? Esta ação não pode ser desfeita.
+                    </p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button 
+                        onclick="closeDeleteModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        onclick="confirmDelete()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                        Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
+            <div class="flex items-center">
+                <div id="toastIcon" class="flex-shrink-0"></div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/notas';
+        let notes = [];
+        let filteredNotes = [];
+        let editingNoteId = null;
+        let noteToDelete = null;
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotes();
+        });
+        async function loadNotes() {
+            try {
+                showLoading(true);
+                const response = await fetch(API_BASE_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                notes = await response.json();
+                filteredNotes = [...notes];
+                renderNotes();
+                showToast('Notas carregadas com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao carregar notas:', error);
+                showToast('Erro ao carregar notas. Verifique se a API está funcionando.', 'error');
+                notes = [];
+                filteredNotes = [];
+                renderNotes();
+            } finally {
+                showLoading(false);
+            }
+        }
+        async function createNote(noteData) {
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(noteData)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const newNote = await response.json();
+                notes.push(newNote);
+                filteredNotes = [...notes];
+                renderNotes();
+                showToast('Nota criada com sucesso!', 'success');
+                return newNote;
+            } catch (error) {
+                console.error('Erro ao criar nota:', error);
+                showToast('Erro ao criar nota.', 'error');
+                throw error;
+            }
+        }
+        async function updateNote(id, noteData) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(noteData)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const updatedNote = await response.json();
+                const index = notes.findIndex(note => note.id === id);
+                if (index !== -1) {
+                    notes[index] = updatedNote;
+                    filteredNotes = [...notes];
+                    renderNotes();
+                }
+                showToast('Nota atualizada com sucesso!', 'success');
+                return updatedNote;
+            } catch (error) {
+                console.error('Erro ao atualizar nota:', error);
+                showToast('Erro ao atualizar nota.', 'error');
+                throw error;
+            }
+        }
+        async function deleteNote(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                notes = notes.filter(note => note.id !== id);
+                filteredNotes = [...notes];
+                renderNotes();
+                showToast('Nota excluída com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao excluir nota:', error);
+                showToast('Erro ao excluir nota.', 'error');
+                throw error;
+            }
+        }
+        function renderNotes() {
+            const notesGrid = document.getElementById('notesGrid');
+            const emptyState = document.getElementById('emptyState');
+            if (filteredNotes.length === 0) {
+                notesGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+            notesGrid.innerHTML = filteredNotes.map(note => `
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-semibold text-gray-900 truncate pr-2">${escapeHtml(note.titulo)}</h3>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button 
+                                onclick="editNote(${note.id})" 
+                                class="text-gray-400 hover:text-blue-600 transition-colors"
+                                title="Editar nota"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="openDeleteModal(${note.id})" 
+                                class="text-gray-400 hover:text-red-600 transition-colors"
+                                title="Excluir nota"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm line-clamp-4">${escapeHtml(note.conteudo)}</p>
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <span class="text-xs text-gray-500">ID: ${note.id}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function filterNotes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm === '') {
+                filteredNotes = [...notes];
+            } else {
+                filteredNotes = notes.filter(note => 
+                    note.titulo.toLowerCase().includes(searchTerm) || 
+                    note.conteudo.toLowerCase().includes(searchTerm)
+                );
+            }
+            renderNotes();
+        }
+        function openCreateModal() {
+            editingNoteId = null;
+            document.getElementById('modalTitle').textContent = 'Nova Nota';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('noteModal').classList.remove('hidden');
+            document.getElementById('noteTitle').focus();
+        }
+        function editNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+            editingNoteId = id;
+            document.getElementById('modalTitle').textContent = 'Editar Nota';
+            document.getElementById('noteTitle').value = note.titulo;
+            document.getElementById('noteContent').value = note.conteudo;
+            document.getElementById('noteModal').classList.remove('hidden');
+            document.getElementById('noteTitle').focus();
+        }
+        function closeModal() {
+            document.getElementById('noteModal').classList.add('hidden');
+            editingNoteId = null;
+        }
+        function openDeleteModal(id) {
+            noteToDelete = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            noteToDelete = null;
+        }
+        async function confirmDelete() {
+            if (noteToDelete) {
+                await deleteNote(noteToDelete);
+                closeDeleteModal();
+            }
+        }
+        async function saveNote(event) {
+            event.preventDefault();
+            const titulo = document.getElementById('noteTitle').value.trim();
+            const conteudo = document.getElementById('noteContent').value.trim();
+            if (!titulo || !conteudo) {
+                showToast('Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+            const noteData = { titulo, conteudo };
+            try {
+                if (editingNoteId) {
+                    noteData.id = editingNoteId;
+                    await updateNote(editingNoteId, noteData);
+                } else {
+                    await createNote(noteData);
+                }
+                closeModal();
+            } catch (error) {
+            }
+        }
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            toastMessage.textContent = message;
+            if (type === 'success') {
+                toastIcon.innerHTML = `
+                    <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+            } else {
+                toastIcon.innerHTML = `
+                    <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                `;
+            }
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        document.addEventListener('keydown', function(event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+                event.preventDefault();
+                openCreateModal();
+            }
+            if (event.key === 'Escape') {
+                closeModal();
+                closeDeleteModal();
+            }
+        });
+    </script>
+    <style>
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</body>
+</html>
