@@ -45,13 +45,13 @@ cd bloco-de-notas-api
 ### 2. Build com Maven
 
 ```bash
-mvn clean package
+mvn clean package -DskipTests
 ```
 
 ### 3. Executar localmente (sem Docker)
 
 ```bash
-java -jar target/bloco-de-notas-api-1.0.0.jar
+java -jar target/bloco-de-notas-app.jar
 ```
 
 A aplicação ficará disponível em `http://localhost:8080/`.
@@ -99,14 +99,13 @@ bloco-de-notas-api/
 
 Base URL: `http://localhost:8080/api/notes`
 
-| Método | Endpoint | Descrição                | Corpo de Requisição (JSON)                               |
-| ------ | -------- | ------------------------ | -------------------------------------------------------- |
-| POST   | `/`      | Criar uma nova nota      | `{ "title": "Título", "content": "Conteúdo" }`           |
-| GET    | `/`      | Listar todas as notas    | —                                                        |
-| GET    | `/{id}`  | Obter nota por ID        | —                                                        |
-| PUT    | `/{id}`  | Atualizar nota existente | `{ "title": "Novo título", "content": "Novo conteúdo" }` |
-| DELETE | `/{id}`  | Excluir nota por ID      | —                                                        |
-
+| Método | Endpoint  | Descrição              | Corpo de Requisição (JSON)                                 |
+| ------- | --------- | ------------------------ | ------------------------------------------------------------ |
+| POST    | `/`     | Criar uma nova nota      | `{ "title": "Título", "content": "Conteúdo" }`           |
+| GET     | `/`     | Listar todas as notas    | —                                                           |
+| GET     | `/{id}` | Obter nota por ID        | —                                                           |
+| PUT     | `/{id}` | Atualizar nota existente | `{ "title": "Novo título", "content": "Novo conteúdo" }` |
+| DELETE  | `/{id}` | Excluir nota por ID      | —                                                           |
 
 ---
 
